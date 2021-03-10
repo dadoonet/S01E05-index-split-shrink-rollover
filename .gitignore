@@ -1,0 +1,3 @@
+# Ignore the Cloud credentials if any is available locally
+.cloud
+
