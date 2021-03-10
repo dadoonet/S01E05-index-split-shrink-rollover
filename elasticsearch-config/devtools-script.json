@@ -1,0 +1,148 @@
+## Setup
+# Inject the eCommerce sample dataset from the UI
+# Create an alias ecommerce
+PUT /kibana_sample_data_ecommerce/_alias/ecommerce
+
+
+## Split the index
+
+# Run a search and check the number of shards (1) and documents (4675)
+GET /ecommerce/_search?size=0
+
+# Split into 10 shards
+POST /kibana_sample_data_ecommerce/_split/kibana_sample_data_ecommerce_target
+{
+  "settings": {
+    "index.number_of_shards": 10
+  }
+}
+
+# Edit the index settings and add "index.blocks.write": true
+# And run again the previous command
+
+# Display the recovery in progress
+GET /_cat/recovery/kibana_sample_data_ecommerce*?v&h=index,files,files_recovered,files_percent,files_total
+
+# A good practice is to have always an alias, so switch the alias
+POST /_aliases
+{
+  "actions" : [
+    { "remove" : { "index" : "kibana_sample_data_ecommerce", "alias" : "ecommerce" } },
+    { "add" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } }
+  ]
+}
+
+# Run a search and check the number of shards (10) and documents (4675)
+GET /ecommerce/_search?size=0
+
+## Shrink the index
+
+# Check shards allocation and get the name of a data node "instance-0000000001"
+GET /_cat/shards/kibana_sample_data_ecommerce*?v&h=index,shard,prirep,state,docs,node
+
+PUT /kibana_sample_data_ecommerce_target/_settings
+{
+  "settings": {
+    "index.number_of_replicas": 0,
+    "index.routing.allocation.require._name": "instance-0000000001", 
+    "index.blocks.write": true
+  }
+}
+
+# Check shards allocation
+GET /_cat/shards/kibana_sample_data_ecommerce*?v&h=index,shard,prirep,state,docs,node
+
+# Shrink the index
+POST /kibana_sample_data_ecommerce_target/_shrink/kibana_sample_data_ecommerce_shrunk
+{
+  "settings": {
+    "index.routing.allocation.require._name": null,
+    "index.blocks.write": null,
+    "index.number_of_replicas": 1,
+    "index.number_of_shards": 2 
+  }
+}
+
+# Check shards allocation
+GET /_cat/shards/kibana_sample_data_ecommerce*?v&h=index,shard,prirep,state,docs,node
+
+# A good practice is to have always an alias, so switch the alias
+POST /_aliases
+{
+  "actions" : [
+    { "remove" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } },
+    { "add" : { "index" : "kibana_sample_data_ecommerce_shrunk", "alias" : "ecommerce" } }
+  ]
+}
+
+# Run a search and check the number of shards (2) and documents (4675)
+GET /ecommerce/_search?size=0
+
+
+## Rollover
+
+# Create an index template for the demo-rollover indices
+PUT _index_template/demo-rollover
+{
+  "template": {
+    "mappings": {
+      "properties": {
+        "foo": {
+          "type": "keyword"
+        }
+      }
+    },
+    "aliases": {
+      "demo-rollover": {}
+    }
+  },
+  "index_patterns": [
+    "demo-rollover-*"
+  ]
+}
+
+# Create an index demo-rollover-000001 with the demo-rollover-write alias
+PUT demo-rollover-000001
+{
+  "aliases": {
+    "demo-rollover-write": {}
+  }
+}
+
+# Index some documents with the run.sh script which runs peridiodically
+#POST demo-rollover-write/_doc
+#{
+#  "foo": "bar"
+#}
+
+# Check the number of documents
+GET demo-rollover/_search
+{
+  "size": 0, 
+  "aggs": {
+    "index": {
+      "terms": {
+        "field": "_index",
+        "order": {
+          "_key": "asc"
+        }
+      }
+    }
+  }
+}
+
+# Sometime run
+POST /demo-rollover-write/_rollover
+{
+  "conditions": {
+    "max_docs":  10,
+    "max_age":   "7d",
+    "max_size": "20gb"
+  }
+}
+
+# Check the indices
+GET /_cat/indices/demo-rollover*?v&h=index,pri,rep,docs.count&s=index
+
+# Check the aliases
+GET /_cat/aliases/demo-rollover*?v&h=alias,index&s=index
