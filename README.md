@@ -58,7 +58,7 @@ Highlight the `kibana_sample_data_ecommerce` index.
 Run a search and check the number of shards (1) and documents (4675)
 
 ```
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce/_search?size=0
 ```
 
 Let say we want to split this index into 10 shards as our shard is overloaded (not the case here though).
@@ -79,7 +79,14 @@ This will fail because before you can split an index:
 
 Change the index settings and add `"index.blocks.write": true`:
 
-![Index Split, Shrink and Rollover](images/10-readonly.png "Index Split, Shrink and Rollover")
+```
+PUT /kibana_sample_data_ecommerce/_settings
+{
+  "settings": {
+    "index.blocks.write": true
+  }
+}
+```
 
 And run again the previous command:
 
@@ -98,27 +105,11 @@ Display the recovery in progress
 GET /_cat/recovery/kibana_sample_data_ecommerce*?v&h=index,files,files_recovered,files_percent,files_total
 ```
 
-A good practice is to have always an alias, so switch the alias
-
-```
-POST /_aliases
-{
-  "actions" : [
-    { "remove" : { "index" : "kibana_sample_data_ecommerce", "alias" : "ecommerce" } },
-    { "add" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } }
-  ]
-}
-```
-
 Run a search and check the number of shards (**10**) and documents (4675)
 
 ```
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce_target/_search?size=0
 ```
-
-Once it's done, it's better to force merge the `kibana_sample_data_ecommerce_target` index.
-
-![Index Split, Shrink and Rollover](images/11-forcemerge.png "Index Split, Shrink and Rollover")
 
 
 ### Shrink
@@ -174,22 +165,10 @@ Check shards allocation.
 GET /_cat/shards/kibana_sample_data_ecommerce*?v&h=index,shard,prirep,state,docs,node
 ```
 
-A good practice is to have always an alias, so switch the alias.
-
-```
-POST /_aliases
-{
-  "actions" : [
-    { "remove" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } },
-    { "add" : { "index" : "kibana_sample_data_ecommerce_shrunk", "alias" : "ecommerce" } }
-  ]
-}
-```
-
 Run a search and check the number of shards (2) and documents (4675)
 
 ```
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce_shrunk/_search?size=0
 ```
 
 ### Rollover
@@ -216,6 +195,8 @@ PUT _index_template/demo-rollover
   ]
 }
 ```
+
+There's an alias `demo-rollover` which is basically the read alias.
 
 Create an index `demo-rollover-000001` with the `demo-rollover-write` alias. We will start writing to this alias.
 

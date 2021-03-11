@@ -1,13 +1,10 @@
 ## Setup
 # Inject the eCommerce sample dataset from the UI
-# Create an alias ecommerce
-PUT /kibana_sample_data_ecommerce/_alias/ecommerce
-
 
 ## Split the index
 
 # Run a search and check the number of shards (1) and documents (4675)
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce/_search?size=0
 
 # Split into 10 shards
 POST /kibana_sample_data_ecommerce/_split/kibana_sample_data_ecommerce_target
@@ -18,22 +15,26 @@ POST /kibana_sample_data_ecommerce/_split/kibana_sample_data_ecommerce_target
 }
 
 # Edit the index settings and add "index.blocks.write": true
+PUT /kibana_sample_data_ecommerce/_settings
+{
+  "settings": {
+    "index.blocks.write": true
+  }
+}
+
 # And run again the previous command
+POST /kibana_sample_data_ecommerce/_split/kibana_sample_data_ecommerce_target
+{
+  "settings": {
+    "index.number_of_shards": 10
+  }
+}
 
 # Display the recovery in progress
 GET /_cat/recovery/kibana_sample_data_ecommerce*?v&h=index,files,files_recovered,files_percent,files_total
 
-# A good practice is to have always an alias, so switch the alias
-POST /_aliases
-{
-  "actions" : [
-    { "remove" : { "index" : "kibana_sample_data_ecommerce", "alias" : "ecommerce" } },
-    { "add" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } }
-  ]
-}
-
 # Run a search and check the number of shards (10) and documents (4675)
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce_target/_search?size=0
 
 ## Shrink the index
 
@@ -66,17 +67,8 @@ POST /kibana_sample_data_ecommerce_target/_shrink/kibana_sample_data_ecommerce_s
 # Check shards allocation
 GET /_cat/shards/kibana_sample_data_ecommerce*?v&h=index,shard,prirep,state,docs,node
 
-# A good practice is to have always an alias, so switch the alias
-POST /_aliases
-{
-  "actions" : [
-    { "remove" : { "index" : "kibana_sample_data_ecommerce_target", "alias" : "ecommerce" } },
-    { "add" : { "index" : "kibana_sample_data_ecommerce_shrunk", "alias" : "ecommerce" } }
-  ]
-}
-
 # Run a search and check the number of shards (2) and documents (4675)
-GET /ecommerce/_search?size=0
+GET /kibana_sample_data_ecommerce_shrunk/_search?size=0
 
 
 ## Rollover
