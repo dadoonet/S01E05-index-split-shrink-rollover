@@ -110,11 +110,11 @@ echo "### Demo is ready ###"
 echo "#####################"
 echo -ne '\n'
 
-# open $KIBANA_URL/app/management/data/index_management/templates
-# open $KIBANA_URL/app/dev_tools/
+open "$KIBANA_URL/app/canvas#/"
 
-# echo "If not yet there, paste the following script in Dev Tools:"
-# cat elasticsearch-config/devtools-script.json
+echo "If not yet there, paste the following script in Dev Tools:"
+cat elasticsearch-config/devtools-script.json
 echo -ne '\n'
+
 
 

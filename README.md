@@ -39,19 +39,9 @@ And run:
 ./setup.sh
 ```
 
-Open Kibana home, and click on the "Add data" and add the Sample eCommerce orders dataset.
-Create a ecommerce alias:
-
-```
-PUT /kibana_sample_data_ecommerce/_alias/ecommerce
-```
-
 ## Demo part
 
-Open the Stack Management in Kibana and go to Index Management.
-Highlight the `kibana_sample_data_ecommerce` index.
-
-![Index Split, Shrink and Rollover](images/01-index-management.png "Index Split, Shrink and Rollover")
+Open Kibana home, and click on the "Add data" and add the Sample eCommerce orders dataset.
 
 ### Split
 
