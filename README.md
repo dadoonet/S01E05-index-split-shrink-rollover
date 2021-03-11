@@ -6,6 +6,8 @@
 
 The setup will check that Elasticsearch and Kibana are running and will remove any index named `kibana_sample_data_ecommerce*`, `demo-rollover*` and the index template `demo-rollover`.
 
+It will also Kibana Canvas slides.
+
 ### Run on cloud (recommended)
 
 This specific configuration is used to ingest the whole bano dataset on a [cloud instance](https://cloud.elastic.co).
