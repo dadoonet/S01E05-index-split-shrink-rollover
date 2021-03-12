@@ -10,7 +10,7 @@ It will also add Kibana Canvas slides.
 
 ### Run on cloud (recommended)
 
-This specific configuration is used to ingest the whole bano dataset on a [cloud instance](https://cloud.elastic.co).
+This specific configuration is used to run the demo on a [cloud instance](https://cloud.elastic.co).
 You need to create a `.cloud` local file which contains:
 
 ```
